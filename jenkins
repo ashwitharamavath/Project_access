@@ -27,7 +27,7 @@ pipeline {
         stage('Validate and Build') {
             parallel {
 
-                stage('Validate Files') {
+                stage('win_agent') {
                     steps {
                         echo "🧾 Checking for essential project files..."
                         bat '''
