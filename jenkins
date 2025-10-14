@@ -24,32 +24,37 @@ pipeline {
             }
         }
 
-        stage('Validate Files') {
-            steps {
-                echo "🧾 Checking for essential project files..."
-                bat '''
-                if exist index.html (
-                    echo index.html found.
-                ) else (
-                    echo ⚠️ index.html missing!
-                )
+        stage('Validate and Build') {
+            parallel {
 
-                if exist faculty.html (
-                    echo faculty.html found.
-                ) else (
-                    echo ⚠️ faculty.html missing!
-                )
-                '''
-            }
-        }
+                stage('Validate Files') {
+                    steps {
+                        echo "🧾 Checking for essential project files..."
+                        bat '''
+                        if exist index.html (
+                            echo index.html found.
+                        ) else (
+                            echo ⚠️ index.html missing!
+                        )
 
-        stage('Build') {
-            steps {
-                echo "🏗️ Preparing static site build (if needed)..."
-                bat '''
-                echo No compilation required for static HTML/CSS project.
-                echo Skipping build step.
-                '''
+                        if exist faculty.html (
+                            echo faculty.html found.
+                        ) else (
+                            echo ⚠️ faculty.html missing!
+                        )
+                        '''
+                    }
+                }
+
+                stage('Build') {
+                    steps {
+                        echo "🏗️ Preparing static site build (if needed)..."
+                        bat '''
+                        echo No compilation required for static HTML/CSS project.
+                        echo Skipping build step.
+                        '''
+                    }
+                }
             }
         }
 
