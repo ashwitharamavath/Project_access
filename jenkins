@@ -1,0 +1,83 @@
+pipeline {
+    agent {
+        label 'win'
+    }
+
+    options {
+        // Allow running on the built-in node if no agent is available
+        // (requires "Use Jenkins built-in node" permission)
+        skipDefaultCheckout(true)
+    }
+
+    environment {
+        PROJECT_NAME = "Project_access"
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                echo "Cloning GitHub repository..."
+                // If repo is private, add credentialsId: 'your-cred-id'
+                checkout([
+                    $class: 'GitSCM',
+                    branches: [[name: '*/main']],
+                    userRemoteConfigs: [[url: 'https://github.com/Pratima2705/Project_access.git']]
+                ])
+            }
+        }
+
+        stage('Setup Environment') {
+            steps {
+                echo "Setting up environment..."
+                // Works on both Windows agent and controller
+                bat '''
+                echo Checking Python installation...
+                python --version
+                if exist requirements.txt (
+                    echo Installing Python dependencies...
+                    pip install -r requirements.txt
+                ) else (
+                    echo No requirements.txt found.
+                )
+                '''
+            }
+        }
+
+        stage('Build') {
+            steps {
+                echo "Running build..."
+                bat 'echo Building Project Access...'
+            }
+        }
+
+        stage('Test') {
+            steps {
+                echo "Running tests..."
+                bat '''
+                if exist tests (
+                    echo Running pytest...
+                    pytest
+                ) else (
+                    echo No tests directory found.
+                )
+                '''
+            }
+        }
+
+        stage('Archive Artifacts') {
+            steps {
+                echo "Archiving artifacts..."
+                archiveArtifacts artifacts: '**/build/**/*.*', fingerprint: true
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "✅ Build succeeded on agent 'win' (or controller if fallback)."
+        }
+        failure {
+            echo "❌ Build failed — check console logs."
+        }
+    }
+}
