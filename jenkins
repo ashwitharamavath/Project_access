@@ -1,12 +1,10 @@
 pipeline {
     agent {
-        label 'win'
+        label 'win'   // Runs on your Windows agent
     }
 
     options {
-        // Allow running on the built-in node if no agent is available
-        // (requires "Use Jenkins built-in node" permission)
-        skipDefaultCheckout(true)
+        skipDefaultCheckout(true)   // We’ll handle checkout manually
     }
 
     environment {
@@ -14,10 +12,10 @@ pipeline {
     }
 
     stages {
+
         stage('Checkout') {
             steps {
-                echo "Cloning GitHub repository..."
-                // If repo is private, add credentialsId: 'your-cred-id'
+                echo "📦 Cloning GitHub repository..."
                 checkout([
                     $class: 'GitSCM',
                     branches: [[name: '*/main']],
@@ -26,18 +24,20 @@ pipeline {
             }
         }
 
-        stage('Setup Environment') {
+        stage('Validate Files') {
             steps {
-                echo "Setting up environment..."
-                // Works on both Windows agent and controller
+                echo "🧾 Checking for essential project files..."
                 bat '''
-                echo Checking Python installation...
-                python --version
-                if exist requirements.txt (
-                    echo Installing Python dependencies...
-                    pip install -r requirements.txt
+                if exist index.html (
+                    echo index.html found.
                 ) else (
-                    echo No requirements.txt found.
+                    echo ⚠️ index.html missing!
+                )
+
+                if exist faculty.html (
+                    echo faculty.html found.
+                ) else (
+                    echo ⚠️ faculty.html missing!
                 )
                 '''
             }
@@ -45,39 +45,29 @@ pipeline {
 
         stage('Build') {
             steps {
-                echo "Running build..."
-                bat 'echo Building Project Access...'
-            }
-        }
-
-        stage('Test') {
-            steps {
-                echo "Running tests..."
+                echo "🏗️ Preparing static site build (if needed)..."
                 bat '''
-                if exist tests (
-                    echo Running pytest...
-                    pytest
-                ) else (
-                    echo No tests directory found.
-                )
+                echo No compilation required for static HTML/CSS project.
+                echo Skipping build step.
                 '''
             }
         }
 
         stage('Archive Artifacts') {
             steps {
-                echo "Archiving artifacts..."
-                archiveArtifacts artifacts: '**/build/**/*.*', fingerprint: true
+                echo "📂 Archiving website files..."
+                // Archive all HTML, CSS, JS, and image files if any
+                archiveArtifacts artifacts: '**/*.html, **/*.css, **/*.js, **/*.png, **/*.jpg', fingerprint: true
             }
         }
     }
 
     post {
         success {
-            echo "✅ Build succeeded on agent 'win' (or controller if fallback)."
+            echo "✅ Build succeeded! Website files archived successfully."
         }
         failure {
-            echo "❌ Build failed — check console logs."
+            echo "❌ Build failed — please check console output."
         }
     }
 }
